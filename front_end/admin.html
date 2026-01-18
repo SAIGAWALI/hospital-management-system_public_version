@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Dashboard</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app-navbar">
+    <div class="app-brand">🏥 Doctor Portal</div>
+    <div style="display:flex; gap:15px; align-items:center;">
+        <span id="adminNameDisplay" style="font-weight:bold; color:#555;"></span>
+        <button onclick="logout()" class="danger btn-auto" id="navLogoutBtn" style="display:none;">Logout</button>
+    </div>
+</div>
+
+<div id="loginView">
+    <div class="soft-card login-card-fix">
+        <div style="font-size: 40px; margin-bottom: 10px;">🩺</div>
+        <h3>Staff Login</h3>
+        <input id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="login()">Login</button>
+        <button onclick="location.href='index.html'" class="secondary" style="margin-top:10px;">← Back to Home</button>
+    </div>
+</div>
+
+<div id="dashboardView" class="hidden dashboard-view">
+  
+    <div class="admin-header">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <button onclick="switchView('appointments')" class="btn-auto" style="background:#4F46E5;">📅 Appointments</button>
+            <button onclick="switchView('patients')" id="Patients" class="btn-auto hidden"  style="background:#10B981;">👥 Patients</button>
+        </div>
+    
+        <div id="apptControls">
+            <select id="doctorFilter" onchange="changeDoctorView()" style="padding:8px; border-radius:8px; display:none;">
+                <option value="all">Select Doctor...</option>
+            </select>
+            <button onclick="loadDashboard()" class="btn-auto" style="background:#f3f4f6; color:#333; margin-left:10px;">🔄 Refresh</button>
+        </div>
+    </div>
+
+  <div class="admin-card card-blue">
+    
+    <div style="border-bottom:1px solid #eee; padding-bottom:15px; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+            <h4 style="margin:0;">⚙️ Portal Settings</h4>
+            <p style="margin:5px 0 0 0; font-size:13px; color:#666;">
+                Status: <b id="portalStatusText">LOADING...</b>
+            </p>
+        </div>
+        <button id="portalBtn" onclick="togglePortal()" class="btn-auto" style="font-size:12px;">Loading...</button>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+            <h4 style="margin:0;">⏰ Manage Slots</h4>
+            <p style="font-size:12px; color:#666; margin:5px 0 0 0;">For: <b id="slotDoctorName">...</b></p>
+        </div>
+        <button onclick="resetSlots()" class="btn-auto" style="background:#F59E0B; font-size:12px;">Reset Defaults</button>
+    </div>
+    
+    <div style="display:flex; gap:10px; margin-top:15px; margin-bottom:15px;">
+        <input id="newSlotTime" type="time" style="margin:0; width:150px;">
+        <button onclick="addSlot()" class="success btn-auto">+ Add</button>
+    </div>
+    <div id="slotList" style="display:flex; flex-wrap:wrap;"></div>
+  </div>
+<div id="patientSection" class="hidden">
+    <h3>👥 Registered Patients</h3>
+    <div class="admin-card">
+        <table style="width:100%; border-collapse:collapse;">
+            <thead>
+                <tr style="background:#f3f4f6; text-align:left;">
+                    <th style="padding:10px;">Photo</th>
+                    <th style="padding:10px;">Name</th>
+                    <th style="padding:10px;">Gender</th>
+                    <th style="padding:10px;">Phone</th>
+                    <th style="padding:10px;">Email</th>
+                </tr>
+            </thead>
+            <tbody id="patientTableBody">
+                </tbody>
+        </table>
+    </div>
+</div>
+
+  <div id="superAdminSection" class="admin-card card-purple hidden">
+    <h4>🛡️ Manage Staff</h4>
+    <button onclick="location.href='add-admin.html'" class="success btn-auto" style="margin-top:10px;">+ Add New Doctor</button>
+    <ul id="adminList" style="margin-top:15px; padding-left:0;"></ul>
+  </div>
+
+  <h4 style="margin-top:30px;" id="Patientlist" class="hidden" >Patient List</h4>
+  <p id="emptyMsg" class="hidden" style="color:#999; text-align:center;">No appointments found.</p>
+  <ul id="list"></ul>
+</div>
+
+<div id="modal" class="modal-overlay hidden">
+  <div class="modal-content" style="max-width:400px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h3 style="margin:0;">Patient Details</h3> 
+        <span onclick="closeModal()" style="cursor:pointer; font-size:24px; color:#999;">&times;</span>
+    </div>
+    <div class="detail-row"><span class="detail-icon">👤</span> <strong>Name:</strong> <span id="mName" style="margin-left:5px;"></span></div>
+    <div class="detail-row"><span class="detail-icon">⏰</span> <strong>Time:</strong> <span id="mTime" class="time-badge" style="margin-left:5px;"></span></div>
+    <div class="detail-row"><span class="detail-icon">🎂</span> <strong>Age:</strong> <span id="mAge" style="margin-left:5px;"></span></div>
+    <div class="detail-row"><span class="detail-icon">📞</span> <strong>Phone:</strong> <span id="mPhone" style="margin-left:5px;"></span></div>
+    <div class="detail-row"><span class="detail-icon">📝</span> <strong>Note:</strong> <span id="mdescription" style="margin-left:5px;"></span></div>
+    <div class="detail-row"><span class="detail-icon">📊</span> <strong>Status:</strong> <span id="mStatus" style="margin-left:5px;"></span></div>
+    <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
+    <button id="btn-patient-history" class="secondary" style="margin-bottom:10px; background:#9CA3AF;">📂 Patient Medical History</button>
+    <button onclick="markDone()" class="success" style="margin-bottom:10px;">✅ Mark as Done</button>
+    <button onclick="deleteAppt()" class="danger">🗑️ Delete Appointment</button>
+  </div>
+</div>
+
+<div id="prescribeModal" class="modal-overlay hidden">
+  <div class="modal-content" style="max-width:600px;">
+    <h3>Write Prescription</h3>
+    <p>Patient: <b id="pName"></b></p>
+    <input id="diagnosis" placeholder="Diagnosis (e.g. Viral Fever)" style="margin-bottom:10px;">
+    <div style="background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:10px;">
+        <div style="display:flex; gap:5px;">
+            <input id="medName" placeholder="Medicine Name" style="flex:2;">
+            <input id="medDose" placeholder="Dose" style="flex:1;">
+            <input id="medFreq" placeholder="Freq" style="flex:1;">
+        </div>
+        <button onclick="addMed()" class="secondary btn-auto" style="width:100%; margin-top:5px;">+ Add Medicine</button>
+        <ul id="medList" style="margin-top:10px; padding-left:20px;"></ul>
+    </div>
+    <textarea id="notes" placeholder="Advice / Notes" style="width:100%; height:80px;"></textarea>
+    <div style="display:flex; gap:10px; margin-top:15px;">
+        <button onclick="submitPrescription()" class="success">Save & Finish</button>
+        <button onclick="closePrescribeModal()" class="danger">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="print-template" style="display:none;">
+    <div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom: 3px solid #2563EB; padding-bottom:15px;">
+            <div>
+                <h1 style="margin:0; font-size: 28px; color:#2563EB; text-transform:uppercase;">🏥 City Hospital</h1>
+                <p style="margin:5px 0 0 0; font-size:14px; color:#444;">
+                    Medical District, Gandhinagar, Gujarat<br>
+                    Ph: +91-98******** | demo@cityhospital.com
+                </p>
+            </div>
+            <div style="text-align:right;">
+                <h3 style="margin:0; color:#444;">OPD PRESCRIPTION</h3>
+                <p style="margin:0; font-size:14px;">Doctor: <span id="printDocName"></span></p>
+                <p style="margin:5px 0 0 0; font-size:14px;">Date: <span id="printDate"></span></p>
+                <p style="margin:0; font-size:14px;">Rx ID: <span id="printID"></span></p>
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid #ddd;">
+            <div>
+                <strong style="color:#666; font-size:12px; text-transform:uppercase;">Patient Name</strong>
+                <div id="printName" style="font-size:18px; font-weight:bold; margin-top:2px;"></div>
+            </div>
+            <div>
+                <strong style="color:#666; font-size:12px; text-transform:uppercase;">Age / Gender</strong>
+                <div style="font-size:18px; font-weight:bold; margin-top:2px;">
+                    <span id="printAge"></span> / <span id="printGender"></span>
+                </div>
+            </div>
+            <div style="grid-column: span 2;">
+                <strong style="color:#666; font-size:12px; text-transform:uppercase;">Diagnosis</strong>
+                <div id="printDiagnosis" style="font-size:16px; margin-top:2px;"></div>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <div style="font-size: 40px; font-weight: bold; font-family: serif; color: #2563EB;">℞</div>
+            <table id="print-table" style="width:100%; border-collapse:collapse; margin-top:20px;">
+                <thead>
+                    <tr>
+                        <th style="border-bottom:2px solid #000; text-align:left; padding:5px;">Medicine Name</th>
+                        <th style="border-bottom:2px solid #000; text-align:left; padding:5px;">Dosage</th>
+                        <th style="border-bottom:2px solid #000; text-align:left; padding:5px;">Frequency</th>
+                    </tr>
+                </thead>
+                <tbody id="printMedList"></tbody>
+            </table>
+        </div>
+
+        <div style="margin-top: 30px; border-left: 4px solid #ddd; padding-left: 15px;">
+            <strong>👨‍⚕️ Advice / Notes:</strong>
+            <p id="printNotes" style="margin-top:5px; white-space: pre-wrap;"></p>
+        </div>
+    </div>
+
+    <div style="margin-top: 50px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+            <div style="text-align:center;">
+                <div style="width:100px; height:80px; border:2px dashed #ccc; display:flex; align-items:center; justify-content:center; color:#ccc;">Stamp</div>
+            </div>
+            <div style="text-align:right; min-width: 250px;">
+                <div style="border-bottom: 2px solid #000; height: 40px;"></div>
+                <p style="margin: 5px 0 0 0; font-weight: bold;">Doctor's Name & Signature</p>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="imageModal" class="modal-overlay hidden" onclick="closeImage()" 
+     style="display:flex; justify-content:center; align-items:center; background:rgba(0,0,0,0.85); z-index:9999;">
+    
+    <img id="previewImg" src="" 
+         style="max-width:90%; max-height:80vh; border-radius:10px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: popIn 0.3s;">
+         
+    <div style="position:absolute; top:20px; right:30px; color:white; font-size:30px; cursor:pointer;">&times;</div>
+</div>
+<script>
+const API_URL =  "https://hospital-backend-ltiv.onrender.com";
+let currentAppointments = []; 
+let selectedApptIndex = null;
+let targetDoctorId = null;
+
+function today() {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+async function login() {
+  const u = document.getElementById('username').value;
+  const p = document.getElementById('password').value;
+  try {
+      const res = await fetch(`${API_URL}/admin-login`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: u, password: p })
+      });
+      const data = await res.json();
+      if (data.success) {
+          localStorage.setItem("adminRole", data.role);
+          localStorage.setItem("adminId", data.id);
+          localStorage.setItem("adminName", data.name);
+          location.reload();
+      } else { alert(data.message); }
+  } catch(e) { alert("Server Error"); }
+}
+
+function logout() { localStorage.clear(); location.reload(); }
+
+// --- INIT ---
+(async function init() {
+    const role = localStorage.getItem("adminRole");
+    const myId = localStorage.getItem("adminId");
+    const myName = localStorage.getItem("adminName");
+
+    if (role) {
+        // 1. SHOW DASHBOARD UI
+        document.getElementById('loginView').style.display = 'none';
+        document.getElementById('dashboardView').classList.remove('hidden');
+        document.getElementById('navLogoutBtn').style.display = 'block';
+        document.getElementById('adminNameDisplay').innerText = myName;
+
+        // 2. LOAD PORTAL STATUS FIRST (So it doesn't get stuck on "LOADING...")
+        loadPortalStatus(); 
+
+        // 3. HANDLE ROLES
+        if (role === 'super' || role === 'admin') {
+            if(role === 'super'){
+                document.getElementById('superAdminSection').classList.remove('hidden');
+            }
+            document.getElementById('doctorFilter').style.display = 'block';
+            document.getElementById('Patients').classList.remove('hidden');
+            await loadDoctorDropdown(); // Wait for doctors to load
+        } else {
+            // For Doctors: Just load their own dashboard
+            targetDoctorId = myId;
+            document.getElementById('slotDoctorName').innerText = myName;
+            loadDashboard();
+        }
+
+        if (role === 'super') loadAdmins();
+    }
+})();
+
+async function loadDoctorDropdown() {
+    try {
+        const res = await fetch(`${API_URL}/doctors`);
+        const doctors = await res.json();
+        const select = document.getElementById('doctorFilter');
+        
+        select.innerHTML = '<option value="" disabled selected>Select Doctor...</option>'; // Clear it
+
+        doctors.forEach(d => {
+            const option = document.createElement('option');
+            option.value = d.id;
+            option.innerText = `${d.name} (${d.degree || 'Specialist'})`; 
+            select.appendChild(option);
+        });
+
+        // AUTO-SELECT FIRST DOCTOR (Safe Version)
+        if(doctors.length > 0) {
+            select.value = doctors[0].id;
+            // Manually trigger the view change
+            changeDoctorView();
+        } else {
+            document.getElementById('slotDoctorName').innerText = "No Doctors Found";
+        }
+    } catch (e) { console.error("Error loading doctors:", e); }
+}
+
+function changeDoctorView() {
+    const select = document.getElementById('doctorFilter');
+    
+    // SAFETY CHECK: If nothing is selected, stop here (Don't crash)
+    if (select.selectedIndex === -1 || !select.value) return;
+
+    targetDoctorId = select.value;
+    
+    // Update the "For: Dr. Name" text
+    const text = select.options[select.selectedIndex].text;
+    document.getElementById('slotDoctorName').innerText = text;
+    
+    loadDashboard();
+}
+// --- PORTAL SETTINGS (Restored) ---
+async function loadPortalStatus() {
+    try {
+        const res = await fetch(`${API_URL}/status`);
+        const data = await res.json();
+        const status = data.status; // 'open' or 'closed'
+        
+        const txt = document.getElementById('portalStatusText');
+        const btn = document.getElementById('portalBtn');
+        
+        if (status === 'open') {
+            txt.innerText = "OPEN";
+            txt.style.color = "var(--success)";
+            btn.innerText = "Close Portal";
+            btn.className = "danger btn-auto";
+        } else {
+            txt.innerText = "CLOSED";
+            txt.style.color = "var(--danger)";
+            btn.innerText = "Open Portal";
+            btn.className = "success btn-auto";
+        }
+    } catch(e) { console.error("Portal Status Error:", e); }
+}
+
+async function togglePortal() {
+    const txt = document.getElementById('portalStatusText');
+    const targetStatus = (txt.innerText === "OPEN") ? 'closed' : 'open';
+    
+    if(!confirm(`Are you sure you want to ${targetStatus === 'open' ? 'OPEN' : 'CLOSE'} the portal?`)) return;
+
+    try {
+        await fetch(`${API_URL}/admin/toggle-status`, {
+            method: "POST", 
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: targetStatus })
+        });
+        loadPortalStatus(); // Refresh UI
+    } catch(e) { alert("Error updating status"); }
+}
+async function loadDashboard() {
+    if(!targetDoctorId) return;
+
+    const resSlots = await fetch(`${API_URL}/master-slots?doctor_id=${targetDoctorId}`);
+    const slots = await resSlots.json();
+    const slotContainer = document.getElementById('slotList');
+    slotContainer.innerHTML = "";
+    slots.forEach(s => slotContainer.innerHTML += `<div class="chip">${s.slot_time} <span onclick="deleteSlot(${s.id})">&times;</span></div>`);
+
+    const resAppt = await fetch(`${API_URL}/admin/appointments?date=${today()}&doctor_id=${targetDoctorId}`);
+    currentAppointments = await resAppt.json(); 
+    
+    const list = document.getElementById('list');
+    const emptyMsg = document.getElementById('emptyMsg');
+    list.innerHTML = "";
+
+    if(currentAppointments.length === 0) emptyMsg.classList.remove('hidden');
+    else {
+        emptyMsg.classList.add('hidden');
+        const myId = localStorage.getItem("adminId");
+        const myRole = localStorage.getItem("adminRole");
+
+        currentAppointments.forEach((appt, index) => {
+            let btns = "";
+
+            if (appt.status === 'Done') {
+                btns = `<button onclick="fetchAndPrint(${appt.id})" class="secondary btn-auto">🖨️ Print Rx</button>`;
+            } else {
+                const canPrescribe = (myId == appt.doctor_id) || (myRole === 'super');
+                if (canPrescribe) {
+                    btns = `
+                    <div class="action-buttons">
+                        <button onclick="openPrescribeModal(${index})" style="background:#4F46E5;" class="btn-auto">💊 Prescribe</button>
+                        <button onclick="openModal(${index})" class="secondary btn-auto">Details</button>
+                    </div>`;
+                } else {
+                    btns = `<button onclick="openModal(${index})" class="secondary btn-auto">Details</button>`;
+                }
+            }
+            
+            list.innerHTML += `
+            <li style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee;">
+                <div>
+                    <span style="background:#EEF2FF; color:#4F46E5; padding:4px 8px; border-radius:4px; font-weight:bold;">${appt.slot_time}</span> 
+                    <span style="font-size:16px; margin-left:10px;">${appt.name}</span>
+                </div>
+                <div>${btns}</div>
+            </li>`;
+        });
+    }
+}
+
+// --- MODALS ---
+function openModal(index) {
+    const appt = currentAppointments[index];
+    selectedApptIndex = index;
+
+    document.getElementById('mName').innerText = appt.name;
+    document.getElementById('mTime').innerText = appt.slot_time;
+    document.getElementById('mAge').innerText = appt.age;
+    document.getElementById('mPhone').innerText = appt.phone;
+    document.getElementById('mdescription').innerText = appt.description || "None";
+    document.getElementById('mStatus').innerText = appt.status;
+    
+    const histBtn = document.getElementById('btn-patient-history');
+    if(appt.patient_id) {
+        histBtn.style.display = 'block';
+        histBtn.onclick = () => location.href = `history.html?id=${appt.patient_id}`;
+    } else {
+        histBtn.style.display = 'none';
+    }
+    document.getElementById('modal').classList.remove('hidden');
+}
+
+let prescriptionData = {};
+
+function openPrescribeModal(index) {
+    const appt = currentAppointments[index];
+    prescriptionData = { appointment_id: appt.id, patient_id: appt.patient_id, medicines: [] };
+
+    document.getElementById('pName').innerText = appt.name;
+    document.getElementById('medList').innerHTML = "";
+    document.getElementById('diagnosis').value = "";
+    document.getElementById('notes').value = "";
+    document.getElementById('prescribeModal').classList.remove('hidden');
+}
+
+function addMed() {
+    const name = document.getElementById('medName').value;
+    const dose = document.getElementById('medDose').value;
+    const freq = document.getElementById('medFreq').value;
+    if(!name) return;
+    prescriptionData.medicines.push({name, dose, freq});
+    document.getElementById('medList').innerHTML += `<li><b>${name}</b> - ${dose} (${freq})</li>`;
+    document.getElementById('medName').value = "";
+    document.getElementById('medDose').value = "";
+    document.getElementById('medFreq').value = "";
+}
+
+async function submitPrescription() {
+    const diagnosis = document.getElementById('diagnosis').value;
+    const notes = document.getElementById('notes').value;
+    if(!diagnosis) return alert("Enter Diagnosis");
+
+    prescriptionData.diagnosis = diagnosis;
+    prescriptionData.notes = notes;
+
+    try {
+        const res = await fetch(`${API_URL}/admin/prescribe`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(prescriptionData)
+        });
+        
+        if(res.ok) {
+            alert("Prescription Saved!");
+            closePrescribeModal();
+            loadDashboard();
+        } else {
+            alert("Failed to save.");
+        }
+    } catch(e) { alert("Server Error"); }
+}
+
+function closePrescribeModal() { document.getElementById('prescribeModal').classList.add('hidden'); }
+function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+
+async function markDone() {
+    const appt = currentAppointments[selectedApptIndex];
+    await fetch(`${API_URL}/appointments/${appt.id}`, { method: "PUT" });
+    closeModal(); loadDashboard();
+}
+async function deleteAppt() {
+    if(confirm("Delete appointment?")) {
+        const appt = currentAppointments[selectedApptIndex];
+        await fetch(`${API_URL}/appointments/${appt.id}`, { method: "DELETE" });
+        closeModal(); loadDashboard();
+    }
+}
+
+async function addSlot() {
+    const time = document.getElementById('newSlotTime').value;
+    if(!time) return alert("Select Time");
+    await fetch(`${API_URL}/admin/add-slot`, {
+        method: "POST", headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ time, doctor_id: targetDoctorId })
+    });
+    loadDashboard();
+}
+async function deleteSlot(id) {
+    if(confirm("Remove slot?")) {
+        await fetch(`${API_URL}/admin/delete-slot/${id}`, { method: "DELETE" });
+        loadDashboard();
+    }
+}
+async function resetSlots() {
+    if(confirm("Reset all slots?")) {
+        await fetch(`${API_URL}/admin/reset-slots`, {
+            method: "POST", headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({ doctor_id: targetDoctorId })
+        });
+        loadDashboard();
+    }
+}
+async function loadAdmins() {
+    const res = await fetch(`${API_URL}/admins`);
+    const admins = await res.json();
+    const list = document.getElementById('adminList');
+    list.innerHTML = "";
+    admins.forEach(a => {
+        let btn = a.role !== 'super' ? `<button onclick="deleteAdmin(${a.id})" class="danger btn-auto" style="padding:2px 8px; font-size:14px;">Delete</button>` : "";
+        list.innerHTML += `<li style="display:flex; justify-content:space-between; padding:10px;"><span>${a.username}</span> ${btn}</li>`;
+    });
+}
+async function deleteAdmin(id) {
+    if(confirm("Delete user?")) {
+        await fetch(`${API_URL}/admins/${id}`, {
+            method: "DELETE", headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({ requesterRole: localStorage.getItem("adminRole") })
+        });
+        loadAdmins();
+    }
+}
+
+// --- SAFE PRINTING ---
+async function fetchAndPrint(id) {
+    try {
+        const res = await fetch(`${API_URL}/admin/prescription-by-appt/${id}`);
+        if(!res.ok) throw new Error("Rx Not Found");
+        const data = await res.json();
+        
+        const setVal = (id, txt) => {
+            const el = document.getElementById(id);
+            if(el) el.innerText = txt;
+        };
+
+        setVal('printName', data.patient_name || "Unknown");
+        setVal('printAge', data.patient_age || "--");
+        setVal('printGender', data.gender || "");
+        setVal('printDocName', data.doctor_name || "Doctor");
+        setVal('printDate', new Date(data.visit_date).toLocaleDateString());
+        setVal('printID', "#" + data.id);
+        setVal('printDiagnosis', data.diagnosis);
+        setVal('printNotes', data.notes || "");
+
+        let medHtml = "";
+        let meds = (typeof data.medicines === 'string') ? JSON.parse(data.medicines) : data.medicines;
+        if(meds.length > 0) {
+                meds.forEach(m => {
+                    medHtml += `
+                        <tr>
+                            <td style="padding:5px;">${m.name}</td>
+                            <td style="padding:5px;">${m.dose}</td>
+                            <td style="padding:5px;">${m.freq}</td>
+                        </tr>`;
+                });
+            } else {
+                medHtml = `<tr><td colspan="3" style="text-align:center; padding:10px;">No medicines.</td></tr>`;
+            }
+        
+
+        
+        const list = document.getElementById('printMedList');
+        if(list) list.innerHTML = medHtml;
+        
+        window.print();
+    } catch(e) { alert("Could not print. Maybe no prescription exists yet?"); }
+}
+
+// --- PATIENT LIST LOGIC ---
+
+function switchView(viewName) {
+    const apptSec = document.getElementById('list');      // Appt List
+    const slotSec = document.querySelector('.card-blue'); // Slot Manager
+    const patSec = document.getElementById('patientSection');
+    const controls = document.getElementById('apptControls');
+    const emptyMsg = document.getElementById('emptyMsg');
+    const patientlist = document.getElementById('Patientlist');
+
+    if (viewName === 'appointments') {
+        apptSec.classList.remove('hidden');
+        slotSec.classList.remove('hidden');
+        patientlist.classList.remove('hidden');
+        controls.style.visibility = 'visible';
+        patSec.classList.add('hidden');
+        loadDashboard(); // Refresh appointments
+    } else {
+        apptSec.classList.add('hidden');
+        slotSec.classList.add('hidden');
+        emptyMsg.classList.add('hidden');
+        patientlist.classList.add('hidden');
+        controls.style.visibility = 'hidden';
+        patSec.classList.remove('hidden');
+        loadPatients(); // Fetch patients
+    }
+}
+
+async function loadPatients() {
+    const tbody = document.getElementById('patientTableBody');
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading...</td></tr>';
+
+    try {
+        const res = await fetch(`${API_URL}/admin/patients`);
+        const data = await res.json();
+
+        tbody.innerHTML = ""; 
+
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No patients found.</td></tr>';
+            return;
+        }
+
+        data.forEach(p => {
+            // Default image fallback
+            const photo = p.photo_url || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+            
+            const row = `
+                <tr style="border-bottom:1px solid #eee;">
+                    <td style="padding:10px;">
+                        <img src="${photo}" onclick="showImage('${photo}')" 
+                             style="width:40px; height:40px; border-radius:50%; object-fit:cover; border:1px solid #ddd; cursor:pointer; transition:0.2s;"
+                             onmouseover="this.style.transform='scale(1.1)'" 
+                             onmouseout="this.style.transform='scale(1)'">
+                    </td>
+                    <td style="padding:10px; font-weight:bold;">${p.name || "Unknown"}</td>
+                    <td style="padding:10px;">${p.gender || "--"}</td>
+                    <td style="padding:10px;">${p.phone || "--"}</td>
+                    <td style="padding:10px; color:#666; font-size:13px;">${p.email}</td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+
+    } catch (err) {
+        console.error(err);
+        tbody.innerHTML = '<tr><td colspan="5" style="color:red; text-align:center;">Error loading data</td></tr>';
+    }
+}
+
+// --- IMAGE PREVIEW LOGIC ---
+function showImage(src) {
+    const modal = document.getElementById('imageModal');
+    const img = document.getElementById('previewImg');
+    
+    img.src = src;
+    modal.classList.remove('hidden'); // Show modal
+}
+
+function closeImage() {
+    document.getElementById('imageModal').classList.add('hidden'); // Hide modal
+}
+
+</script>
+</body>
+</html>

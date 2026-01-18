@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Patient Portal - Login</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+</head>
+<body>
+<div class="app-navbar">
+    <div class="app-brand">🏥 City Hospital</div>
+</div>
+
+<div class="page-container">
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:50px; align-items:center;">
+        
+        <!-- Left branding panel -->
+        <div>
+            <h2 style="font-size:38px; margin-bottom:10px;">Welcome to City Hospital</h2>
+            <p style="color:#555; max-width:400px;">
+                Book appointments, view prescriptions, and manage your healthcare securely online.
+            </p>
+            <img src="https://img.freepik.com/free-vector/doctor-consultation-illustration_114360-1515.jpg"
+                 style="width:100%; max-width:420px; margin-top:30px;">
+        </div>
+
+        <!-- Right login card -->
+        <div class="soft-card">
+
+<div>
+    <div style="font-size: 50px; margin-bottom: 20px;">🏥</div>
+    <h3>Patient Portal</h3>
+    
+    <div style="display:flex; justify-content:center; gap:20px; margin-bottom:20px;">
+        <span onclick="showMode('login')" id="tabLogin" style="cursor:pointer; font-weight:bold; border-bottom:2px solid var(--primary);">Login</span>
+        <span onclick="showMode('signup')" id="tabSignup" style="cursor:pointer; color:#666;">Create Account</span>
+    </div>
+
+    <button onclick="googleLogin()" style="background:white; color:#333; border:1px solid #ccc; display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:15px;">
+        <img src="google_logo.jpg" width="20">
+        Continue with Google
+    </button>
+
+    <p style="color:#aaa;">- OR -</p>
+
+    <input id="email" placeholder="Email Address">
+    <input id="password" type="password" placeholder="Password">
+    
+    <button id="actionBtn" onclick="handleEmailAuth()">Login</button>
+    
+    <p id="msg" style="color:red; font-size:13px; margin-top:10px;"></p>
+
+    <button onclick="location.href='index.html'" class="secondary" style="margin-top:20px;">Back Home</button>
+</div>
+
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyB0tIYvsPJnel84tDfqWlBFX5E4jH-1aw8",
+    authDomain: "hospitalapp-1c6c7.firebaseapp.com",
+    projectId: "hospitalapp-1c6c7",
+    storageBucket: "hospitalapp-1c6c7.firebasestorage.app",
+    messagingSenderId: "821301826174",
+    appId: "1:821301826174:web:006cab390f06e64ea13e2f",
+    measurementId: "G-T1R1BHL4LQ"
+  };
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const provider = new firebase.auth.GoogleAuthProvider();
+
+// 1. Google Login 
+async function googleLogin() {
+    try {
+        const result = await auth.signInWithPopup(provider);
+        const user = result.user;
+        
+        
+        console.log("Saving user to DB...");
+        await saveUserToDB(user); 
+
+        // Proceed to Dashboard
+        redirectToDashboard(user);
+
+    } catch (err) {
+        document.getElementById('msg').innerText = err.message;
+        console.error("Login Error:", err);
+    }
+}
+// 2. Email Login/Signup Logic
+//  SECURE EMAIL AUTH (Verification Required)
+async function handleEmailAuth() {
+    const e = document.getElementById('email').value;
+    const p = document.getElementById('password').value;
+    const msg = document.getElementById('msg');
+    
+    // Clear previous errors
+    msg.innerText = "";
+
+    if (!e || !p) {
+        msg.innerText = "Please enter both email and password.";
+        return;
+    }
+    
+    try {
+        let userCredential;
+
+        if (mode === 'signup') {
+            // SIGN UP FLOW
+            userCredential = await auth.createUserWithEmailAndPassword(e, p);
+            const user = userCredential.user;
+
+            // 1. Send the Verification Email
+            await user.sendEmailVerification();
+
+            // 2. Save to DB (So they exist in the system)
+            await saveUserToDB(user);
+
+            // 3. IMPORTANT: Sign out immediately so no one can't access dashboard yet
+            await auth.signOut();
+
+            // 4. Tell what to do
+            alert("✅ Account created! We have sent a verification link to " + e + ".\n\nPlease check your inbox (and spam folder) and click the link to activate your account.");
+            
+            // Refresh page to clear fields
+            location.reload();
+            return; // Stop here! Don't redirect to dashboard.
+
+        } else {
+            // --- LOGIN FLOW ---
+            userCredential = await auth.signInWithEmailAndPassword(e, p);
+            const user = userCredential.user;
+
+            // 5. THE GATEKEEPER: Check if they verified
+            if (user.emailVerified === false) {
+                // If not verified, kick them out
+                await auth.signOut();
+                msg.style.color = "red";
+                msg.innerText = "⚠️ Email not verified. Please check your inbox.";
+                
+                // Optional: Resend link if they lost it
+                user.sendEmailVerification(); 
+                return; // Stop here!
+            }
+        }
+        
+        // If we reach here, it means they are Verified (or Google Login)
+        redirectToDashboard(userCredential.user);
+
+    } catch (err) {
+       console.error("Login Error:", err);
+        msg.style.color = "red";
+
+        // Check for specific "Wrong Password" or "User Not Found" errors
+        if (err.code === 'auth/invalid-login-credentials' || 
+            err.code === 'auth/user-not-found' || 
+            err.code === 'auth/wrong-password') {
+            
+            // 1. Show a friendly message
+            msg.innerHTML = `
+                Incorrect email or password.<br>
+                <span onclick="resetPassword()" 
+                      style="text-decoration:underline; cursor:pointer; color:blue; font-weight:bold;">
+                      Forgot Password?
+                </span>`;
+        } else {
+            // Show other errors (like "Too many attempts") normally
+            msg.innerText = "Error: " + err.message;
+        }
+    }
+}
+// NEW: FORGOT PASSWORD FUNCTION ---
+async function resetPassword() {
+    const email = document.getElementById('email').value;
+    if (!email) {
+        alert("Please enter your email address in the box first.");
+        return;
+    }
+
+    try {
+        await auth.sendPasswordResetEmail(email);
+        alert(`✅ Password reset email sent to ${email}!\n\nCheck your inbox (and spam folder) to create a new password.`);
+    } catch (error) {
+        console.error(error);
+        if (error.code === 'auth/user-not-found') {
+            alert("No account found with this email.");
+        } else {
+            alert("Error: " + error.message);
+        }
+    }
+}
+
+// 3. Helper: Save to Database
+async function saveUserToDB(user) {
+    const API_URL =  "https://hospital-backend-ltiv.onrender.com";
+    try {
+        await fetch(`${API_URL}/save-user`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                uid: user.uid,
+                name: user.displayName || "Anonymous",
+                email: user.email
+            })
+        });
+    } catch (err) {
+        console.error("Save Error:", err);
+    }
+}
+
+// 4. Helper: Redirect
+function redirectToDashboard(user) {
+    // Save to LocalStorage for the UI to use
+    localStorage.setItem("user_id", user.uid);
+    localStorage.setItem("user_email", user.email);
+    localStorage.setItem("user_name", user.displayName || "Patient");
+    
+    location.href = 'patient-dashboard.html';
+}
+
+// UI Toggles
+let mode = 'login';
+function showMode(m) {
+    mode = m;
+    document.getElementById('tabLogin').style = m==='login' ? "cursor:pointer; font-weight:bold; border-bottom:2px solid var(--primary);" : "cursor:pointer; color:#666;";
+    document.getElementById('tabSignup').style = m==='signup' ? "cursor:pointer; font-weight:bold; border-bottom:2px solid var(--primary);" : "cursor:pointer; color:#666;";
+    document.getElementById('actionBtn').innerText = m==='login' ? "Login" : "Create Account";
+}
+</script>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

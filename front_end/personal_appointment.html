@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Medical History</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app-navbar">
+    <div class="app-brand">🏥 City Hospital</div>
+    <div class="app-nav-right">
+        <button id="navBackBtn" class="secondary" onclick="location.href = 'patient-dashboard.html'">← Back</button>
+    </div>
+</div>
+
+<div class="page-container">
+
+<div class="soft-card" style="max-width:900px; margin:auto;">
+    <h3>⏰ Today's Appointments</h3>
+    
+    <button id="backBtn" class="secondary" style="width:auto; margin-bottom:20px;" onclick="location.href = 'patient-dashboard.html'">← Back</button>
+    
+    <div id="historyList">Loading...</div>
+</div>
+</div>
+
+
+
+<script>
+const API_URL =  "https://hospital-backend-ltiv.onrender.com";
+
+//  STEP 1: DETECT USER TYPE (Admin vs Patient) 
+const urlParams = new URLSearchParams(window.location.search);
+const uid =localStorage.getItem("user_id");
+
+//  STEP 2: CONFIGURE BACK BUTTON 
+const backBtn = document.getElementById('backBtn');
+document.getElementById("navBackBtn").onclick = backBtn.onclick;
+    backBtn.innerText = "← Back to Dashboard";
+    backBtn.onclick = function() { location.href = 'patient-dashboard.html'; };
+
+    function today() {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+const currentDate = today();
+// STEP 3: LOAD HISTORY 
+async function loadHistory() {
+    if(!uid) {
+        alert("No Patient ID found.");
+        location.href = 'patient-login.html';
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/patient/appointments?date=${currentDate}&patient_id=${uid}`);
+        console.log(res);
+        if (!res.ok) throw new Error(`Server status: ${res.status}`);
+
+        const data = await res.json();
+        const list = document.getElementById('historyList');
+
+        if(data.length === 0) {
+            list.innerHTML = "<p style='text-align:center; color:#666; margin-top:20px;'>No appointments found.</p>";
+            return;
+        }
+
+        list.innerHTML = ""; 
+        
+        for (const record of data) {
+    const response = await fetch(
+        `${API_URL}/doctor_name?docId=${record.doctor_id}`
+    );
+    const doctorData = await response.json();
+    
+    const statusColor =
+        record.status === 'confirmed'
+            ? '#10B981'
+            : record.status === 'pending'
+            ? '#F59E0B'
+            : '#EF4444';
+
+    const statusLabel =
+        record.status.charAt(0).toUpperCase() + record.status.slice(1);
+
+    list.innerHTML += `
+        <div class="admin-card" style="margin-bottom:15px; display:flex; justify-content:space-between; align-items:center; padding:15px;">
+            <div style="flex:1;">
+                <p style="margin:5px 0;"><strong>👤 Patient:</strong> ${record.name || "N/A"}</p>
+                <p style="margin:5px 0;"><strong>👨‍⚕️ Doctor:</strong> ${doctorData[0].name || "N/A"}</p>
+            </div>
+
+            <div style="flex:1;">
+                <p style="margin:5px 0;"><strong>⏰ Time Slot:</strong> ${record.slot_time || "N/A"}</p>
+                <p style="margin:5px 0;"><strong>📝 Description:</strong> ${record.description || "N/A"}</p>
+            </div>
+
+            <div style="flex:0.5; text-align:right;">
+                <span style="background:${statusColor}; color:white; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:bold;">
+                    ${statusLabel}
+                </span>
+            </div>
+        </div>
+    `;
+}
+
+
+    } catch (err) {
+        console.error("Error:", err);
+        document.getElementById('historyList').innerHTML = `<p style="color:red; text-align:center;">Failed to load appointments.</p>`;
+    }
+}
+
+
+
+// Start
+loadHistory();
+</script>
+</body>
+</html>

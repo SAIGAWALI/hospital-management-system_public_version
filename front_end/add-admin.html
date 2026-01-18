@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Add New Admin</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app-navbar">
+    <div class="app-brand">🏥 City Hospital – Super Admin</div>
+</div>
+
+<div class="page-container">
+
+<div class="soft-card" style="max-width:450px; margin:auto;">
+  <h3>Create New Admin</h3>
+  <p style="font-size:12px; color:#666;">Only Super Admins can do this.</p>
+  <input id="newName" placeholder="Full Name (e.g. Dr. Sharma)">
+  <input id="newDegree" placeholder="Degree (e.g. Dentist, Ortho, MBBS)">
+  <input id="newUsername" placeholder="Username (Login ID)">
+  <input id="newPassword" type="password" placeholder="New Password">
+  <label for="adminrole">Admin Role:</label>
+    <select name="adminrole" id="adminrole">
+      <option value="admin">Admin</option>
+      <option value="super">Super Admin</option>
+      <option value="doctor">Doctor</option>
+    </select>
+  
+  <button onclick="createAdmin()" class="success">Create</button>
+  <button onclick="location.href='admin.html'" style="background:#666; margin-top:10px;">Back to Dashboard</button>
+</div>
+
+<script>
+const API_URL = "https://hospital-backend-ltiv.onrender.com";
+
+// 1. Security Check: Kick user out if they are not logged in as Super Admin
+const creater_role = localStorage.getItem("adminRole");
+if (creater_role !== 'super') {
+    alert("Access Denied: You are not a Super Admin.");
+    location.href = 'admin.html';
+}
+
+async function createAdmin() {
+    const u = document.getElementById('newUsername').value;
+    const p = document.getElementById('newPassword').value;
+    const name = document.getElementById('newName').value;
+    const degree = document.getElementById('newDegree').value;
+    const role = document.getElementById('adminrole').value;
+    const currentRole = localStorage.getItem("adminRole");
+
+    if (!u || !p || !name || !degree || !role) return alert("Please fill all fields");
+
+    const secretKey = prompt("Enter the Super Admin Secret Key:");
+    if (!secretKey) return alert("Secret key is required!");
+
+    try {
+        const res = await fetch(`${API_URL}/create-admin`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+                newUsername: u, 
+                newPassword: p,
+                newrole: role, 
+                newName: name,
+                newDegree: degree,
+                creater_role: "super",
+                admin_secret: secretKey 
+            })
+        });
+
+        const result = await res.json();
+        if (result.success) {
+            alert("Success! New Admin " + u + " created.");
+            location.href = 'admin.html'; // Go back after success
+        } else {
+            alert("Error: " + result.message);
+        }
+    } catch (err) {
+        alert("Server Error");
+    }
+}
+</script>
+</div>
+</body>
+</html>

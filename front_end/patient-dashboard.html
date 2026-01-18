@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Patient Dashboard</title>
+<link rel="stylesheet" href="style.css">
+<style>
+    /* DASHBOARD STYLES */
+    body { background: #f4f7fb; }
+
+    /* Navbar */
+    .navbar {
+        background: white;
+        padding: 15px 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    .brand {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* Profile Chip */
+    .profile-chip {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: #F3F4F6;
+        padding: 6px 16px;
+        border-radius: 30px;
+        transition: 0.2s;
+        cursor: pointer;
+        border: 1px solid transparent;
+    }
+    .profile-chip:hover { background: #eef2ff; border-color: var(--primary); }
+
+    .user-info { display: flex; flex-direction: column; align-items: flex-end; }
+    .user-name { font-weight: 600; font-size: 14px; color: #333; }
+    .user-role { font-size: 11px; color: #888; text-transform: uppercase; }
+
+    /* Navbar Avatar */
+    .avatar {
+        width: 38px;
+        height: 38px;
+        background: var(--primary);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        font-size: 16px;
+        overflow: hidden; 
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* Layout */
+    .dashboard-container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
+
+    .hero-banner {
+        background: linear-gradient(135deg, var(--primary) 0%, #8B5CF6 100%);
+        color: white;
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 10px 25px rgba(79, 70, 229, 0.2);
+        margin-bottom: 40px;
+        position: relative;
+        overflow: hidden;
+    }
+    .hero-banner h2 { margin: 0 0 10px 0; color: white; font-size: 28px; }
+    .hero-banner p { margin: 0; opacity: 0.9; }
+
+    .action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; }
+
+    .action-card {
+        background: white;
+        padding: 30px;
+        border-radius: 16px;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0,0,0,0.05);
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 180px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    }
+    .action-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); border-color: var(--primary); }
+    
+    .card-icon {
+        width: 50px; height: 50px; background: #EEF2FF; border-radius: 12px;
+        display: flex; justify-content: center; align-items: center; font-size: 24px; margin-bottom: 15px;
+    }
+    .card-arrow { align-self: flex-end; color: var(--primary); font-weight: bold; font-size: 20px; }
+
+    /*  PROFILE MODAL STYLES  */
+    .profile-header { text-align: center; margin-bottom: 20px; position: relative; }
+
+    /* Large Modal Avatar */
+    .profile-avatar-large {
+        width: 100px;
+        height: 100px;
+        background: var(--primary);
+        color: white;
+        font-size: 36px;
+        font-weight: bold;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0 auto 10px auto;
+        border: 4px solid #EEF2FF;
+        position: relative;
+        overflow: hidden;
+    }
+    .profile-avatar-large img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* Camera Icon */
+    .edit-photo-btn {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        z-index: 10;
+    }
+    .edit-photo-btn:hover { background: #f0f0f0; }
+
+    .profile-field { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+    .profile-field label { color: #666; font-size: 13px; width: 60px; }
+    .profile-field input { border: none; background: transparent; font-weight: 500; color: #333; flex: 1; padding: 5px; font-family: inherit; font-size: 14px; }
+    .profile-field input:focus { background: #f9f9f9; outline: 2px solid #EEF2FF; border-radius: 4px; }
+    .profile-field .btn-edit { color: var(--primary); cursor: pointer; font-size: 14px; padding: 5px; }
+    
+    .btn-save-profile { width: 100%; margin-top: 20px; display: none; }
+</style>
+</head>
+<body>
+    
+    <nav class="navbar">
+        <div class="brand"><span>🏥</span> City Hospital</div>
+        <div style="display:flex; gap:15px; align-items:center;">
+            <div class="profile-chip" onclick="openProfile()" title="Click to view profile">
+                <div class="user-info">
+                    <span class="user-name" id="userName">Guest</span>
+                    <span class="user-role">Patient</span>
+                </div>
+                <div class="avatar" id="navAvatar">G</div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="hero-banner">
+            <h2 id="welcomeMsg">Welcome back!</h2>
+            <p>Your health is our priority. What would you like to do today?</p>
+            <div style="position:absolute; right:-20px; bottom:-50px; width:150px; height:150px; background:white; opacity:0.1; border-radius:50%;"></div>
+        </div>
+
+        <div class="action-grid">
+            <div class="action-card" onclick="location.href='appointment.html'">
+                <div><div class="card-icon">📅</div><h4>Book Appointment</h4><p>Schedule a new consultation.</p></div>
+                <div class="card-arrow">→</div>
+            </div>
+            <div class="action-card" onclick="location.href='personal_appointment.html'">
+                <div><div class="card-icon">⏰</div><h4>Today's Appointments</h4><p>View your scheduled appointments.</p></div>
+                <div class="card-arrow">→</div>
+            </div>
+            <div class="action-card" onclick="location.href='history.html'">
+                <div><div class="card-icon" style="background:#F3F4F6; color:#666;">📂</div><h4 style="color:#666;">Medical History</h4><p>View past prescriptions.</p></div>
+                <div class="card-arrow">→</div>
+            </div>
+            
+        </div>
+    </div>
+
+    <div id="profileModal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width:350px;">
+            <div style="display:flex; justify-content:flex-end;">
+                <span onclick="closeProfile()" style="cursor:pointer; font-size:20px; color:#999;">&times;</span>
+            </div>
+
+            <div class="profile-header">
+                <div class="profile-avatar-large" id="modalAvatarContainer">
+                    <span id="modalInitial">G</span>
+                </div>
+                
+                <input type="file" id="fileInput" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
+                
+                <div class="edit-photo-btn" onclick="document.getElementById('fileInput').click()" style="position:relative; margin:-30px auto 0 auto; right: -35px;">
+                    📷
+                </div>
+                
+                <p style="font-size:12px; color:#666; margin-top:10px;">Manage your personal info</p>
+            </div>
+
+            <div class="profile-field">
+                <label>Name</label>
+                <input id="pName" value="Loading..." disabled>
+                <span class="btn-edit" onclick="enableEdit('pName')">✎</span>
+            </div>
+            <div class="profile-field">
+                <label>Phone</label>
+                <input id="pPhone" value="--" placeholder="+91..." disabled>
+                <span class="btn-edit" onclick="enableEdit('pPhone')">✎</span>
+            </div>
+            <div class="profile-field">
+                <label>Email</label>
+                <input id="pEmail" value="Loading..." disabled style="color:#888;">
+            </div>
+            <div class="profile-field">
+                <label>Gender</label>
+                <input id="pGender" value="Loading..." disabled style="color:#888;">
+                <span class="btn-edit" onclick="enableEdit('pGender')">✎</span>
+            </div>
+
+            <button id="saveBtn" class="success btn-save-profile" onclick="saveProfile()">Save Changes</button>
+            <hr style="border:0; border-top:1px solid #eee; margin: 20px 0;">
+            <button onclick="logout()" class="danger" style="background:white; color:var(--danger); border:1px solid #fee2e2;">Sign Out</button>
+        </div>
+    </div>
+
+<script>
+
+    const API_URL =  "https://hospital-backend-ltiv.onrender.com"; 
+    const uid = localStorage.getItem("user_id");
+    const uname = localStorage.getItem("user_name") || "Guest";
+
+    // 1. CLOUDINARY CONFIGURATION 
+    const CLOUD_NAME = "dhig3ybjy"; 
+    const UPLOAD_PRESET = "hospital_app"; 
+
+    if (!uid) location.href = 'patient-login.html';
+
+    //  2. SETUP UI
+    document.getElementById('userName').innerText = uname;
+    document.getElementById('welcomeMsg').innerText = `Hello, ${uname.split(' ')[0]}!`;
+    setAvatarText(uname.charAt(0).toUpperCase());
+    loadProfileData(); 
+
+    // 3. NEW UPLOAD LOGIC (Cloudinary)
+    async function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if(!file) return;
+
+        // Show "Uploading..." preview
+        document.getElementById('modalAvatarContainer').innerHTML = `<span style='font-size:12px;'>Uploading...</span>`;
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', UPLOAD_PRESET);
+
+        try {
+            // A. Upload directly to Cloudinary (No Server needed!)
+            const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            
+            if (data.error) throw new Error(data.error.message);
+
+            // B. Get the Secure URL
+            const imageUrl = data.secure_url;
+
+            // C. Send ONLY the URL to Backend
+            await savePhotoToBackend(imageUrl);
+            
+            // D. Update UI
+            updateAvatarUI(imageUrl);
+            alert("Photo Updated Successfully!");
+
+        } catch (error) {
+            console.error("Upload failed:", error);
+            alert("Upload failed: " + error.message);
+            setAvatarText(uname.charAt(0).toUpperCase());
+        }
+    }
+
+    async function savePhotoToBackend(url) {
+        // Send the URL string to your database
+        const res = await fetch(`${API_URL}/patient/upload-photo`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ uid: uid, photo_url: url }) 
+        });
+        const data = await res.json();
+        if(!data.success) throw new Error("Backend save failed");
+    }
+
+    // --- 4. PROFILE DATA LOADING ---
+    async function loadProfileData() {
+        try {
+            const res = await fetch(`${API_URL}/patient/profile/${uid}`);
+            const data = await res.json();
+            
+            if(data.name) {
+                document.getElementById('userName').innerText = data.name;
+                localStorage.setItem("user_name", data.name);
+            }
+            // Load Photo
+            if(data.photo_url) updateAvatarUI(data.photo_url);
+            
+        } catch(err) { console.error("Profile Load Error", err); }
+    }
+
+    function updateAvatarUI(imgSrc) {
+        document.getElementById('navAvatar').innerHTML = `<img src="${imgSrc}" style="width:100%; height:100%; object-fit:cover;">`;
+        document.getElementById('modalAvatarContainer').innerHTML = `<img src="${imgSrc}" style="width:100%; height:100%; object-fit:cover;">`;
+    }
+
+    function setAvatarText(initial) {
+        const html = `<span style="font-size:inherit;">${initial}</span>`;
+        document.getElementById('navAvatar').innerHTML = html;
+        document.getElementById('modalAvatarContainer').innerHTML = html;
+    }
+
+    // MODAL FUNCTIONS
+    async function openProfile() {
+        document.getElementById('profileModal').classList.remove('hidden');
+        try {
+            const res = await fetch(`${API_URL}/patient/profile/${uid}`);
+            const data = await res.json();
+            if(data.name) document.getElementById('pName').value = data.name;
+            if(data.email) document.getElementById('pEmail').value = data.email;
+            if(data.phone) document.getElementById('pPhone').value = data.phone;
+            if(data.gender) document.getElementById('pGender').value = data.gender;
+            if(data.photo_url) updateAvatarUI(data.photo_url);
+        } catch(err) { console.error(err); }
+    }
+
+    function closeProfile() {
+        document.getElementById('profileModal').classList.add('hidden');
+        document.getElementById('saveBtn').style.display = 'none';
+        disableEdit('pName'); disableEdit('pPhone');disableEdit('pGender');
+    }
+
+    function enableEdit(fieldId) {
+        document.getElementById(fieldId).disabled = false; 
+        document.getElementById(fieldId).focus();
+        document.getElementById('saveBtn').style.display = 'block';
+    }
+    function disableEdit(fieldId) { document.getElementById(fieldId).disabled = true; }
+
+    async function saveProfile() {
+        const newName = document.getElementById('pName').value;
+        const newPhone = document.getElementById('pPhone').value;
+        const newGender = document.getElementById('pGender').value;
+        try {
+            await fetch(`${API_URL}/patient/profile`, {
+                method: "PUT", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ uid, name: newName, phone: newPhone, gender: newGender })
+            });
+            localStorage.setItem("user_name", newName);
+            document.getElementById('userName').innerText = newName;
+            alert("Saved!");
+            closeProfile();
+        } catch(err) { alert("Error saving profile"); }
+    }
+
+    function logout() {
+        if(confirm("Sign out?")) {
+            localStorage.clear();
+            location.href = 'index.html';
+        }
+    }
+</script>
+
+</body>
+</html>

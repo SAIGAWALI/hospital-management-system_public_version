@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Book Appointment</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+  <h3>Book Appointment</h3>
+
+  <form id="bookForm" onsubmit="book(event)">
+    <input id="name" required placeholder="Patient Name">
+    <input id="age" type="number" required placeholder="Age">
+    <input id="phone" required placeholder="Phone Number">
+    <input id="description" placeholder="Reason for Visit">
+    
+    <label style="display:block; text-align:left; margin-top:15px; font-weight:bold;">1. Select Doctor:</label>
+    <select id="doctor" onchange="loadSlots()" required style="margin-bottom:10px;">
+        <option value="" disabled selected>Select a Doctor...</option>
+    </select>
+
+    <label style="display:block; text-align:left; margin-top:10px; font-weight:bold;">2. Select Time Slot:</label>
+    <select id="time" required disabled>
+      <option value="" disabled selected>Select Doctor First</option>
+    </select>
+
+    <button type="submit" style="margin-top:20px;">Confirm Booking</button>
+  </form>
+  
+  <button onclick="goBack()" class="secondary" style="margin-top:10px;">Back</button>
+</div>
+
+<script>
+const API_URL =  "https://hospital-backend-ltiv.onrender.com";
+const socket = io(API_URL);
+
+async function init() {
+    // Load Doctor List
+    const res = await fetch(`${API_URL}/doctors`);
+    const doctors = await res.json();
+    const select = document.getElementById('doctor');
+    // Clear and Add Default
+    select.innerHTML = `<option value="" disabled selected>Select a Doctor...</option>`;
+    doctors.forEach(d => {
+        const option = document.createElement('option');
+        option.value = d.id;
+        //  SHOW DEGREE HERE
+        option.innerText = `${d.name} (${d.degree || 'Specialist'})`; 
+        select.appendChild(option);
+    });
+}
+
+function today() {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+async function loadSlots() {
+    const doctorSelect = document.getElementById('doctor');
+    const docId = doctorSelect.value; // Get selected Doctor ID
+    const timeSelect = document.getElementById('time');
+    
+    // Reset Dropdown
+    timeSelect.innerHTML = "<option>Loading...</option>";
+    timeSelect.disabled = true;
+
+    if (!docId) return; // Stop if no doctor selected
+
+    try {
+        // 1.  SEND DOCTOR ID TO SERVER
+        const res = await fetch(`${API_URL}/master-slots?doctor_id=${docId}`);
+        const masterSlots = await res.json();
+
+        // 2. Get Booked Slots 
+        const bookedRes = await fetch(`${API_URL}/booked-slots?date=${today()}&doctor_id=${docId}`);
+        const bookedData = await bookedRes.json();
+        const bookedTimes = bookedData.map(b => b.slot_time);
+
+        timeSelect.innerHTML = "<option value='' disabled selected>Select a Time</option>";
+        
+        if (masterSlots.length === 0) {
+            timeSelect.innerHTML += "<option disabled>No slots available for this doctor</option>";
+        }
+
+        // 3. Build Options
+        const now = new Date();
+        const curH = now.getHours();
+        const curM = now.getMinutes();
+
+        masterSlots.forEach(slot => {
+            const t = slot.slot_time;
+            const [h, m] = t.split(':').map(Number);
+            const opt = document.createElement('option');
+            opt.value = t;
+
+        // just check: Is the current hour > slot hour?
+        let isPast = (curH > h || (curH === h && curM >= m));
+        
+            if (bookedTimes.includes(t)) {
+                opt.innerText = t + " (Booked)";
+                opt.disabled = true;
+                opt.style.color = "red";
+            } else if (isPast) {
+                opt.innerText = t + " (Passed)";
+                opt.disabled = true;
+                opt.style.color = "#ccc";
+            } else {
+                opt.innerText = t;
+            }
+            timeSelect.appendChild(opt);
+        });
+        timeSelect.disabled = false;
+
+    } catch (err) {
+        console.error(err);
+        timeSelect.innerHTML = "<option>Error loading slots</option>";
+    }
+}
+async function book(e) {
+  e.preventDefault();
+  const uid = localStorage.getItem("user_id");
+  if (!uid) return alert("Please Login First");
+
+  const data = {
+    name: document.getElementById('name').value,
+    age: document.getElementById('age').value,
+    phone: document.getElementById('phone').value,
+    description: document.getElementById('description').value,
+    doctor_id: document.getElementById('doctor').value,
+    time: document.getElementById('time').value,
+    date: today(),
+    userId: uid
+  };
+
+  const res = await fetch(`${API_URL}/book`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
+  });
+  
+  if (res.ok) {
+      alert("Booked Successfully!");
+      location.href = "patient-dashboard.html";
+  } else {
+      const r = await res.json();
+      alert("Error: " + r.message);
+  }
+}
+
+function goBack() {
+    location.href = localStorage.getItem("user_id") ? 'patient-dashboard.html' : 'index.html';
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,545 @@
+/* IMPORT MODERN FONT */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+:root {
+  --primary: #4F46E5; /* Indigo */
+  --primary-hover: #4338ca;
+  --success: #10B981; /* Emerald Green */
+  --danger: #EF4444; /* Red */
+  --dark: #1F2937;
+  --light: #F3F4F6;
+  --glass-bg: rgba(255, 255, 255, 0.95);
+  --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: #f4f7fb;
+  min-height: 100vh;
+  color: var(--dark);
+}
+
+/* --- CARDS & CONTAINERS --- */
+.container {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  width: 90%;
+  max-width: 450px; /* Default small width for Login */
+  padding: 40px;
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  text-align: center;
+  animation: slideUp 0.5s ease-out;
+}
+/* Center old single-card pages safely */
+.container {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 40px;
+}
+
+
+/* Dashboard needs to be wider */
+#dashboardView {
+  max-width: 800px;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+h2, h3, h4 {
+  margin-top: 0;
+  font-weight: 600;
+  color: #111;
+}
+
+/* --- FORMS --- */
+input, select {
+  width: 100%;
+  padding: 12px 16px;
+  margin: 8px 0 20px 0;
+  border: 2px solid #E5E7EB;
+  border-radius: 12px;
+  font-size: 15px;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+input:focus, select:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+}
+
+/* --- BUTTONS --- */
+button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background-color: var(--primary);
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+button:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+button:active { transform: translateY(0); }
+
+button.danger { background-color: var(--danger); }
+button.danger:hover { background-color: #dc2626; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }
+
+button.success { background-color: var(--success); }
+button.success:hover { background-color: #059669; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
+
+button.secondary { background-color: #9CA3AF; }
+button.secondary:hover { background-color: #6B7280; }
+
+/* --- ADMIN DASHBOARD SECTIONS --- */
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.admin-card {
+  background: white;
+  padding: 25px;
+  border-radius: 16px;
+  margin-bottom: 25px;
+  text-align: left;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+  border-left: 5px solid var(--primary);
+}
+
+.card-purple { border-left-color: #8B5CF6; }
+.card-blue { border-left-color: #3B82F6; }
+
+/* --- LISTS --- */
+ul { list-style: none; padding: 0; }
+
+li {
+  background: white;
+  border: 1px solid #F3F4F6;
+  margin-bottom: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: 0.2s;
+}
+
+li:hover {
+  border-color: var(--primary);
+  transform: scale(1.01);
+}
+
+/* --- CHIPS (For Slots) --- */
+.chip {
+  background: #EEF2FF;
+  color: var(--primary);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  margin: 5px;
+}
+
+.chip span {
+  margin-left: 8px;
+  cursor: pointer;
+  color: var(--danger);
+  font-weight: bold;
+}
+
+/* --- MODAL --- */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 400px;
+  text-align: left;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.hidden { display: none !important; }
+
+/* --- PRINT STYLES --- */
+/* --- PROFESSIONAL PRINT STYLES --- */
+/* --- FIXED PRINT STYLES (Single Page) --- */
+@media print {
+    @page {
+        size: A4;
+        margin: 0; /* Removes browser header/footer */
+    }
+
+    /* 1. CRITICAL: Physically remove all website elements from the page */
+    body > :not(#print-template) {
+        display: none !important;
+    }
+
+    /* 2. Ensure the body fits exactly one page */
+    html, body {
+        width: 210mm;
+        height: 297mm;
+        background: white;
+        margin: 0;
+        padding: 0;
+        overflow: hidden; /* Cut off any accidental spillover */
+    }
+
+    /* 3. Show only the Print Template */
+    #print-template {
+        display: flex !important; /* Restore the Flex layout */
+        flex-direction: column;
+        justify-content: space-between; /* Keeps footer at bottom */
+        
+        /* Use relative, NOT fixed (Fixed repeats on every page) */
+        position: relative; 
+        
+        width: 210mm;
+        height: 297mm;
+        padding: 20mm;
+        box-sizing: border-box;
+        background: white;
+        visibility: visible !important;
+        z-index: 9999;
+    }
+
+    /* 4. Ensure all children inside the template are visible */
+    #print-template * {
+        visibility: visible !important;
+    }
+
+    /* Table Styling for Print */
+    #print-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    #print-table th {
+        border-bottom: 2px solid #000;
+        text-align: left;
+        padding: 5px;
+        font-weight: bold;
+    }
+    #print-table td {
+        border-bottom: 1px solid #ccc;
+        padding: 8px 5px;
+    }
+}
+/* Modern Download Button */
+.btn-download {
+    background-color: white;
+    color: #4F46E5; /* Your Primary Blue */
+    border: 1px solid #e0e7ff;
+    padding: 8px 300px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px; /* Space between icon and text */
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.btn-download:hover {
+    background-color: #4F46E5;
+    color: white;
+    border-color: #4F46E5;
+    transform: translateY(-2px); /* Slight lift effect */
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2); /* Soft glow shadow */
+}
+
+.btn-download:active {
+    transform: translateY(0); /* Press down effect */
+}
+/* ================================
+   COMMERCIAL UI UPGRADE LAYER
+   (Safe – no JS or logic affected)
+================================ */
+
+/* Global background */
+body {
+    background: #f4f7fb !important;
+}
+
+/* Navbar */
+.app-navbar {
+    background: white;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    padding: 15px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.app-brand {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.app-nav-right {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+/* Page layout */
+.page-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+/* Soft cards */
+.soft-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+    padding: 25px;
+}
+
+/* Grid for dashboards */
+.grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(280px,1fr));
+    gap: 25px;
+}
+
+/* Hero banner */
+.hero-banner {
+    background: linear-gradient(135deg, var(--primary), #6366F1);
+    color: white;
+    border-radius: 20px;
+    padding: 40px;
+    margin-bottom: 30px;
+}
+
+.hero-banner h2 {
+    margin: 0 0 10px 0;
+    color: white;
+}
+
+/* Clickable dashboard cards */
+.dashboard-card {
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    cursor: pointer;
+    transition: 0.25s;
+    border: 1px solid #eef2f7;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+    border-color: var(--primary);
+}
+/* ===== FULL PAGE LAYOUT FIX ===== */
+
+/* This is for pages like index.html, dashboards, history, etc */
+.full-page {
+    width: 100%;
+    max-width: none;
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0;
+}
+
+/* Fix navbar links */
+.nav-links a {
+    color: #334155 !important;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.nav-links a:hover {
+    color: var(--primary) !important;
+}
+/* ================= ADMIN DASHBOARD FIXES ================= */
+
+/* Center the admin dashboard card */
+#dashboardView {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 1100px;
+}
+
+/* Improve admin header spacing */
+.admin-header {
+    background: #f8fafc;
+    padding: 20px 25px;
+    border-radius: 14px;
+    margin-bottom: 30px;
+}
+
+/* Give admin cards more breathing room */
+.admin-card {
+    margin-bottom: 30px;
+}
+
+/* Clean slot chips */
+.chip {
+    background: #eef2ff;
+    color: var(--primary);
+    border-radius: 20px;
+    padding: 8px 14px;
+}
+/* ===== NAVBAR LINKS (HOME / DOCTORS / SERVICES / CONTACT) ===== */
+
+.app-nav-right a,
+.nav-links a {
+    text-decoration: none;
+    color: #334155;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 8px;
+    transition: 0.2s;
+}
+
+.app-nav-right a:hover,
+.nav-links a:hover {
+    background: #eef2ff;
+    color: var(--primary);
+}
+/* --- FIXES FOR STRETCHED UI --- */
+
+/* 1. Login Card Constraint */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+}
+.login-card {
+    width: 100%;
+    max-width: 400px !important; /* Forces it to be small */
+    margin: auto;
+}
+
+/* 2. Fix Giant Delete Buttons in Lists */
+.list-btn {
+    width: auto !important; /* Overrides the global 100% */
+    padding: 5px 15px;
+    font-size: 12px;
+    margin: 0;
+}
+
+/* 3. Horizontal Button Group (Prescribe + Details) */
+.btn-group {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+.btn-group button {
+    width: auto !important;
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+/* 4. Restore Professional Modal Grid */
+.modal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+    background: #f9fafb;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+}
+/* --- UI FIXES --- */
+
+/* 1. Fix Stretched Login Box */
+#loginView {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+}
+.login-card-fix {
+    width: 100%;
+    max-width: 400px;
+    margin: auto;
+    text-align: center;
+}
+
+/* 2. Make Buttons Auto-Width (Not 100%) */
+.btn-auto {
+    width: auto !important;
+    padding: 8px 15px;
+    display: inline-block;
+}
+
+/* 3. Action Buttons Layout (Horizontal) */
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+/* 4. Details Modal Styling (Matching Your Screenshot) */
+.detail-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 15px;
+    color: #333;
+}
+.detail-icon {
+    font-size: 18px;
+    width: 25px;
+}
+.time-badge {
+    background: #EEF2FF;
+    color: #4F46E5;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-weight: bold;
+}
