@@ -264,8 +264,11 @@ function logout() { localStorage.clear(); location.reload(); }
         loadPortalStatus(); 
 
         // 3. HANDLE ROLES
-        if (role === 'super' || role === 'admin') {
-            if(role === 'super'){
+        const res=await fetch(`${API_URL}/adminrole/${myId}`)
+        const data=await res.json();
+        const adminrole=data.role;
+        if (adminrole === 'super' || adminrole === 'admin') {
+            if(adminrole === 'super'){
                 document.getElementById('superAdminSection').classList.remove('hidden');
             }
             document.getElementById('doctorFilter').style.display = 'block';
@@ -278,7 +281,7 @@ function logout() { localStorage.clear(); location.reload(); }
             loadDashboard();
         }
 
-        if (role === 'super') loadAdmins();
+        if (adminrole === 'super') loadAdmins();
     }
 })();
 
@@ -538,7 +541,7 @@ async function deleteAdmin(id) {
     if(confirm("Delete user?")) {
         await fetch(`${API_URL}/admins/${id}`, {
             method: "DELETE", headers: {"Content-Type":"application/json"},
-            body: JSON.stringify({ requesterRole: localStorage.getItem("adminRole") })
+            body: JSON.stringify({ requestid: localStorage.getItem("adminId") })
         });
         loadAdmins();
     }

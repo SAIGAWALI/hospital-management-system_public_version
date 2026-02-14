@@ -402,10 +402,50 @@ app.post('/patient/upload-photo', (req, res) => {
 app.get('/admins', (req, res) => {
     db.query("SELECT id, username, role, name FROM admins", (err, results) => res.json(results));
 });
+app.get('/adminrole/:id',(req,res)=>{
+    const admin_id=req.params.id;
+    db.query("select role from admins where id=?",[admin_id],(err,result)=>{
+        if(err){
+            console.error(err);
+            return res.status(500).json({ error: "Database error" });
+        }
+        else if(result.length===0){
+            const id={role:"guest"};
+            res.json(id);
+            return;
+        }
+        else{
+            res.json({role:result[0].role});
+        }
+    });
+})
 
 app.delete('/admins/:id', (req, res) => {
-    if (req.body.requesterRole !== 'super') return res.status(403).json({ message: "Denied" });
-    db.query("DELETE FROM admins WHERE id = ?", [req.params.id], (err) => res.json({ success: true }));
+    const req_id=req.body.requestid;
+    
+    db.query("SELECT role FROM admins WHERE id=?",[req_id],(err,result)=>{
+        if(err || result.length==0){
+            console.error(err);
+            return res.status(403).json({ message: "Denied" });
+        }
+        else{
+            const req_role=result[0].role;
+            if (req_role !== 'super') return res.status(403).json({ message: "Denied" });
+    db.query("DELETE FROM admins WHERE id = ?", [req.params.id], (err, deleteResult) => {
+
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).json({ message: "Delete failed" });
+                    }
+
+                    if (deleteResult.affectedRows === 0) {
+                        return res.status(404).json({ message: "Admin not found" });
+                    }
+
+                    res.json({ success: true });})
+        }
+    })
+    
 });
 
 // --- SETTINGS ---
